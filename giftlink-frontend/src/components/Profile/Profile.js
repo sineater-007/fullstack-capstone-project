@@ -65,19 +65,25 @@ const handleSubmit = async (e) => {
 
     const payload = { ...updatedDetails };
     const response = await fetch(`${urlConfig.backendUrl}/api/auth/update`, {
-      method: "PUT",//Step 1: Task 1
-      headers: {//Step 1: Task 2
-        "Authorization": `Bearer ${authtoken}`,
-        "Content-Type": "application/json",
-        "Email": email,
-      },
-      body: JSON.stringify(payload),//Step 1: Task 3
+        //Step 1: Task 1
+        method: "PUT",
+        //Step 1: Task 2
+        headers: {
+          "Authorization": `Bearer ${authtoken}`,
+          "Content-Type": "application/json",
+          "Email": email,
+        },
+        //Step 1: Task 3
+        body: JSON.stringify(payload),
     });
 
     if (response.ok) {
       // Update the user details in session storage
-      setUserName(updatedDetails.name);//Step 1: Task 4
-      sessionStorage.setItem("name", updatedDetails.name);//Step 1: Task 5
+      //Step 1: Task 4
+      setUserName(updatedDetails.name);
+      //Step 1: Task 5
+      sessionStorage.setItem("name", updatedDetails.name);
+      
       setUserDetails(updatedDetails);
       setEditMode(false);
       // Display success message to the user
@@ -107,7 +113,7 @@ return (
     type="email"
     name="email"
     value={userDetails.email}
-    disabled // Disable the email field
+    disabled
   />
 </label>
 <label>

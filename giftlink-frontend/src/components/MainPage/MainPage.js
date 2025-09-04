@@ -1,84 +1,101 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {urlConfig} from '../../config';
+import React, { useEffect, useState } from 'react';
+import './LoginPage.css';
 
-function MainPage() {
-    const [gifts, setGifts] = useState([]);
+import {urlConfig} from '../../config';
+import { useAppContext } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+function LoginPage() {
+
+    //insert code here to create useState hook variables for email, password
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const [incorrect, setIncorrect] = useState('');
     const navigate = useNavigate();
+    const bearerToken = sessionStorage.getItem('bearer-token');
+    const { setIsLoggedIn } = useAppContext();
 
     useEffect(() => {
-        // Task 1: Write async fetch operation
-        const fetchGifts = async () => {
-            try {
-                let url = `${urlConfig.backendUrl}/api/gifts`
-                const response = await fetch(url);
-                if (!response.ok) {
-                    //something went wrong
-                    throw new Error(`HTTP error; ${response.status}`)
-                }
-                const data = await response.json();
-                setGifts(data);
-            } catch (error) {
-                console.log('Fetch error: ' + error.message);
-            }
-        };
-        fetchGifts();
-    }, []);
+        if (sessionStorage.getItem('auth-token')) {
+          navigate('/app')
+        }
+      }, [navigate])
 
-    // Task 2: Navigate to details page
-    const goToDetailsPage = (productId) => {
-         navigate(`/app/product/${productId}`);
-      };
+    // insert code here to create handleLogin function and include console.log
+    const handleLogin = async () => {
+        const res = await fetch(`${urlConfig.backendUrl}/api/auth/login`, {
+            method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          })
+        });
 
-    // Task 3: Format timestamp
-    const formatDate = (timestamp) => {
-        const date = new Date(timestamp * 1000);
-        return date.toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' });
-      };
-
-    const getConditionClass = (condition) => {
-        return condition === "New" ? "list-group-item-success" : "list-group-item-warning";
-    };
+        const json = await res.json();
+        console.log('Json',json);
+        if (json.authtoken) {
+          sessionStorage.setItem('auth-token', json.authtoken);
+          sessionStorage.setItem('name', json.userName);
+          sessionStorage.setItem('email', json.userEmail);
+          setIsLoggedIn(true);
+          navigate('/app');
+        } else {
+          document.getElementById("email").value="";
+          document.getElementById("password").value="";
+          setIncorrect("Wrong password. Try again.");
+          setTimeout(() => {
+            setIncorrect("");
+          }, 2000);
+        }
+    }
 
     return (
-        <div className="container mt-5">
-            <div className="row">
-                {gifts.map((gift) => (
-                    <div key={gift.id} className="col-md-4 mb-4">
-                        <div className="card product-card">
+      <div className="container mt-5">
+        <div className="row justify-content-center">
+          <div className="col-md-6 col-lg-4">
+            <div className="login-card p-4 border rounded">
+              <h2 className="text-center mb-4 font-weight-bold">Login</h2>
 
-                            {/* // Task 4: Display gift image or placeholder */}
-                            <div className="image-placeholder">
-                                {gift.image ? (
-                                <img src={gift.image} alt={gift.name} className="card-img-top" />
-                            ) : (
-                                <div className="no-image-available">No Image Available</div>
-                                )}
-                            </div>
-
-                            <div className="card-body">
-
-                                {/* // Task 5: Display gift image or placeholder */}
-                                <h5 className="card-title">{gift.name}</h5>
-
-                                <p className={`card-text ${getConditionClass(gift.condition)}`}>
-                                {gift.condition}
-                                </p>
-
-                                {/* // Task 6: Display gift image or placeholder */}
-                                <p className="card-text">{formatDate(gift.date_added)}</p>
-                                
-
-                                <button onClick={() => goToDetailsPage(gift.id)} className="btn btn-primary">
-                                    View Details
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+            <div className="mb-3">
+                <label htmlFor="email" className="form-label">Email</label>
+                <input
+                    id="email"
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
             </div>
+
+            <div className="mb-3">
+                <label htmlFor="password" className="form-label">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        className="form-control"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+            </div>
+
+            <span style={{color:'red',height:'.5cm',display:'block',fontStyle:'italic',fontSize:'12px'}}>{incorrect}</span>
+                <button className="btn btn-primary w-100 mb-3" onClick={handleLogin}>Login</button>
+                <p className="mt-4 text-center">
+                    New here? <a href="/app/register" className="text-primary">Register Here</a>
+                </p>
+
+            </div>
+          </div>
         </div>
-    );
+      </div>
+    )
 }
 
-export default MainPage;
+export default LoginPage;
